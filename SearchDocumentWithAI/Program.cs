@@ -14,7 +14,7 @@ var host = Host.CreateDefaultBuilder(args)
     .Build();
 
 var application = host.Services.GetRequiredService<Application>();
-await application.ExecuteAsync(args.ElementAtOrDefault(0));
+await application.ExecuteAsync();
 
 static void ConfigureServices(HostBuilderContext context, IServiceCollection services)
 {

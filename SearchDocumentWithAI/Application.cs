@@ -1,7 +1,5 @@
-﻿using System.Diagnostics;
-using ChatGptNet;
+﻿using ChatGptNet;
 using SearchDocumentWithAI.Services;
-using SharpToken;
 
 namespace SearchDocumentWithAI;
 
@@ -10,47 +8,27 @@ internal class Application
     private readonly IChatGptClient chatGptClient;
     private readonly IDocumentService documentService;
 
-    private static readonly GptEncoding encoding = GptEncoding.GetEncoding("cl100k_base");
-
     public Application(IChatGptClient chatGptClient, IDocumentService documentService)
     {
         this.chatGptClient = chatGptClient;
         this.documentService = documentService;
     }
 
-    public async Task ExecuteAsync(string? fileName)
+    public async Task ExecuteAsync()
     {
         string? message = null;
         var conversationId = Guid.NewGuid();
 
-        while (string.IsNullOrWhiteSpace(fileName))
+        Console.WriteLine("How should the assistant behave?");
+        Console.Write("For example: 'You are an helpful assistant', 'Answer like Shakespeare', 'Give me only wrong answers'. (Press ENTER for no recommendation): ");
+        var systemMessage = Console.ReadLine();
+
+        if (!string.IsNullOrWhiteSpace(systemMessage))
         {
-            Console.Write("Provide the file name of the PDF document you want to ask about: ");
-            fileName = Console.ReadLine();
-        }
-
-        using (var stream = File.OpenRead(fileName))
-        {
-            var content = await documentService.ExtractTextFromPdfAsync(stream);
-
-            var tokenCount = encoding.Encode(content).Count;
-            Debug.WriteLine($"Token count: {tokenCount}");
-
-            content = await documentService.NormalizeAsync(content);
-
-            tokenCount = encoding.Encode(content).Count;
-            Debug.WriteLine($"Token count: {tokenCount}");
-
-            var systemMessage = $$"""
-                You are an assistant that knows the following information only:
-                ---
-                {{content}}
-                ---
-                You can use only the information above to answer questions. If you don't know the answer, reply suggesting to refine the question.
-                """;
-
             await chatGptClient.SetupAsync(conversationId, systemMessage);
         }
+
+        Console.WriteLine();
 
         do
         {
