@@ -21,6 +21,20 @@ public partial class DocumentService : IDocumentService
         languageDetector.AddAllLanguages();
     }
 
+    public Task<string> ExtractTextFromPdfAsync(Stream stream)
+    {
+        var content = new StringBuilder();
+        using var document = PdfDocument.Open(stream);
+
+        foreach (var page in document.GetPages())
+        {
+            content.Append(page.Text);
+            content.Append(' ');
+        }
+
+        return Task.FromResult(content.ToString());
+    }
+
     public Task<string> NormalizeAsync(string input)
     {
         var detectedLanguage = languageDetector.Detect(input);
@@ -80,19 +94,5 @@ public partial class DocumentService : IDocumentService
     internal record class TransformedTextData
     {
         public string[] SanitizedWords { get; init; } = Array.Empty<string>();
-    }
-
-    public Task<string> ExtractTextFromPdfAsync(Stream stream)
-    {
-        var content = new StringBuilder();
-        using var document = PdfDocument.Open(stream);
-
-        foreach (var page in document.GetPages())
-        {
-            content.Append(page.Text);
-            content.Append(' ');
-        }
-
-        return Task.FromResult(content.ToString());
     }
 }
